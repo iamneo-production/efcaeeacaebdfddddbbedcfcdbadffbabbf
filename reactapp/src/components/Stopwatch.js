@@ -5,7 +5,7 @@ function Stopwatch() {
   const [time, setTime] = useState({hr:0,min:0,sec:0});
   const [timer, setTimer] = useState(null);
   const [status, setStatus] = useState("start");
-  var {hr:newHr,min:newMin,sec:newSec}=time;
+  let {hr:newHr,min:newMin,sec:newSec}=time;
 
   const start = ()=>{
     setStatus("pause");
