@@ -1,72 +1,96 @@
-import React, { useState, useRef } from 'react';
-import classes from './stopwatch.module.css'
+import { useEffect, useRef, useState } from 'react'
+export default function StopWatch() {
+    const timerRef = useRef()
+    const [MilliSeconds, setMilliSeconds] = useState(0)
+    const [Minutes, setMinutes] = useState(0)
+    const [Seconds, setSeconds] = useState(0)
+    const [buttonState, setButtonState] = useState({
+        showStart: true,
+        disabledReset: true,
+        showPause: false,
+        showResume: false
+    })
+    function timer() {
+        setMilliSeconds(prev => prev + 1)
+        if (MilliSeconds === 60) {
+            setMilliSeconds(0);
+            setSeconds(prev => prev + 1)
+        }
+        if (Seconds === 60) {
+            setMinutes(prev => prev + 1)
+            setSeconds(0)
+        }
+    }
+    console.log(MilliSeconds);
+    function pauseTimer() {
+        setButtonState(prev => {
+            return {
+                ...prev,
+                showResume: true,
+                showPause: false
+            }
+        })
+        clearInterval(timerRef.current)
+    }
+    function resetTimer() {
+        clearInterval(timerRef.current)
+        setButtonState({
+            showStart: true,
+            disabledReset: true,
+            showPause: false,
+            showResume: false
+        })
+        setSeconds(0);
+        setMilliSeconds(0);
+        setMinutes(0);
+    }
+    function resumeTimer() {
+        setButtonState(prev => {
+            return {
+                ...prev,
+                showResume: false,
+                showPause: true
+            }
+        })
+        timerRef.current = setInterval(timer, 1000)
+    }
+    function startTimer() {
+        setButtonState(prev => {
+            return {
+                ...prev,
+                showStart: false,
+                showPause: true,
+                disabledReset: false
+            }
+        })
+        timerRef.current = setInterval(timer, 1000)
+    }
+    useEffect(() => {
+        return () => {
+            clearInterval(timerRef.current);
+            timerRef.current = undefined;
+        }
+    }, [])
+    return <div style={{ backgroundColor: '#54bde1', height: '550px', width: '45%', borderRadius: '35px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ backgroundColor: 'white', height: '75%', width: '99%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px', justifyContent: 'center' }}>
+            <p style={{ fontWeight: 'bold', fontSize: '40px', }}>React Stopwatch</p>
+            <p data-testid="time" style={{ fontWeight: 'bold', fontSize: '38px', marginTop: '2vh' }}>{Minutes < 10 ? `0${Minutes}` : Minutes} : {Seconds<10?`0${Seconds}`:Seconds} : {MilliSeconds<10?`0${MilliSeconds}`:MilliSeconds}</p>
+            <div style={{ marginTop: '2vh', display: 'flex', flexDirection: 'row', gap: '1vw' }}>
+                {
+                    buttonState.showStart &&
+                    <button data-testid="start" onClick={() => startTimer()} style={{ width: '120px', padding: '12px', fontWeight: 'bold', border: '3px solid gray', borderRadius: '4px', cursor: 'pointer' }}>Start</button>
 
-function Stopwatch() {
-  const [time, setTime] = useState({ hours: 0, minutes: 0, seconds: 0 });
-  const [isRunning, setIsRunning] = useState(false);
-  const intervalRef = useRef(null);
-  const [text,setText] = useState("Start")
-  const[isDisabled,setIsDisabled] = useState(true)
-
-  const start = () => {
-    setText("Stop")
-    setIsDisabled(false)
-    setIsRunning(true);
-    intervalRef.current = setInterval(() => {
-      setTime((prevTime) => {
-        const seconds = prevTime.seconds + 1;
-        const minutes = prevTime.minutes + Math.floor(seconds / 60);
-        const hours = prevTime.hours + Math.floor(minutes / 60);
-        return {
-          hours: hours,
-          minutes: minutes % 60,
-          seconds: seconds % 60,
-        };
-      });
-    }, 1000);
-  };
-
-  const stop = () => {
-    setText("Resume")
-    clearInterval(intervalRef.current);
-    setIsRunning(false);
-  };
-
-  const reset = () => {
-    setIsDisabled(true)
-    clearInterval(intervalRef.current);
-    setIsRunning(false);
-    setTime({ hours: 0, minutes: 0, seconds: 0 });
-  };
-
-  const formatTime = (time) => {
-    return `${time.hours.toString().padStart(2, '0')}:${time.minutes.toString().padStart(2, '0')}:${time.seconds.toString().padStart(2, '0')}`;
-  };
-
-  return (
-    <div>
-      <div className={classes.main}>
-            <div className={classes.inner_main}>
-                <div className={classes.top}>
-                    <h2 className={classes.heading}>
-                        React Stopwatch
-                    </h2>
-                </div>
-                <div className={classes.middle}>
-                    <p id={classes.time}>
-                        {formatTime(time)}
-                    </p>
-                </div>
-                <div className={classes.bottom}>
-                    <button onClick={isRunning ? stop : start}
-                        className={classes.btn}>{text}</button>
-                    <button className={`${classes.btn} ${isDisabled && classes.disabled}`} id={classes.start}
-                    onClick={reset}>Reset</button>
-                </div>
+                }
+                {
+                    buttonState.showPause &&
+                    <button data-testid="pause" onClick={() => pauseTimer()} style={{ width: '120px', padding: '12px', fontWeight: 'bold', border: '3px solid gray', borderRadius: '4px', cursor: 'pointer' }}>Pause</button>
+                }
+                {
+                    buttonState.showResume &&
+                    <button data-testid="resume" onClick={() => resumeTimer()} style={{ width: '120px', padding: '12px', fontWeight: 'bold', border: '3px solid gray', borderRadius: '4px', cursor: 'pointer' }}>Resume</button>
+                }
+                <button disabled={buttonState.disabledReset} onClick={() => { !buttonState.disabledReset && resetTimer() }} data-testid="reset" style={{ width: '120px', padding: '12px', fontWeight: 'bold', border: '3px solid gray', borderRadius: '4px', cursor: !buttonState.disabledReset && 'pointer' }}>Reset</button>
             </div>
         </div>
     </div>
-  );
 }
-
-export default Stopwatch;
